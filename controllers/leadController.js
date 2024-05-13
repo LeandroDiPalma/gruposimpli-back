@@ -4,6 +4,7 @@ export const createLeadController = async (req, res) => {
     const { dealerId } = req.params; 
     try {
         const leadData = { ...req.body, dealer: dealerId }; 
+        console.log(leadData)
         const lead = await createLead(leadData);
         res.status(201).json(lead);
     } catch (error) {

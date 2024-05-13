@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import jwtMiddleware from './auth.js';
 import dotenv from 'dotenv';
+import expressJwt from 'express-jwt';
 
 import authRoutes from './routes/authRoutes.js';
 import vehicleRoutes from './routes/vehicleRoutes.js';
@@ -25,21 +26,25 @@ connect(MONGO_URI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
+  app.use((req, res, next) => {
+    try {
+      jwtMiddleware().unless({
+        path: [
+          { url: '/', methods: ['GET'] },
+          { url: '/api/login', methods: ['POST'] },
+          { url: '/api/dealers', methods: ['GET'] },
+          { url: /^\/api\/dealer\/\w+\/vehicles$/, methods: ['GET'] }, 
+          { url: /^\/api\/dealer\/\w+\/posts$/, methods: ['GET'] }, 
+          { url: /^\/api\/dealer\/\w+\/posts\/\w+$/, methods: ['GET'] }, 
+          { url: /^\/api\/dealer\/\w+\/leads$/, methods: ['POST'] }
+        ]
+      })(req, res, next);
+    } catch (error) {
+      console.error('JWT Middleware error:', error);
+      next(error);
+    }
+  });
 
-app.use((req, res, next) => {
-  try {
-    jwtMiddleware().unless({
-      path: [
-        '/',
-        '/api/login',
-        { url: /^\/api\/public\//, methods: ['GET'] }
-      ]
-    })(req, res, next);
-  } catch (error) {
-    console.error('JWT Middleware error:', error);
-    next(error);
-  }
-});
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
